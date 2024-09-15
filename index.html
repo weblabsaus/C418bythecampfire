@@ -3,13 +3,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>C418 by the Campfire</title>
     <style>
-        /* Make the gif container fill the entire viewport */
         body, html {
             margin: 0;
             padding: 0;
             height: 100%;
             overflow: hidden;
-            font-family: 'Courier', 'Consolas', monospace; /* Applying the monospaced font */
+            font-family: 'Courier', 'Consolas', monospace;
         }
 
         .gif-container {
@@ -18,7 +17,6 @@
             height: 100%;
         }
 
-        /* Ensure the GIF covers the entire window while maintaining aspect ratio */
         .gif-container img {
             position: absolute;
             top: 0;
@@ -28,31 +26,60 @@
             object-fit: cover;
         }
 
-        /* Position the embedded player to float over the gif */
-        .embed-player {
-            position: absolute;
-            bottom: 20px; 
-            left: 20px;
-            z-index: 1;
+        .embed-player, .settings-button, .github-button, .credits {
+            transition: opacity 0.5s;
         }
 
-        /* Settings button styling */
+        .embed-player {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 1;
+            opacity: 1;
+        }
+
         .settings-button {
             position: absolute;
-            bottom: 20px; /* Bottom-right position */
+            bottom: 20px;
             right: 20px;
             z-index: 2;
             width: 50px;
             height: 50px;
             background: url('settings.png') no-repeat center center;
             background-size: contain;
-            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+            background-color: rgba(0, 0, 0, 0.5);
             border: none;
             cursor: pointer;
-            border-radius: 50%; /* Make it circular */
+            border-radius: 50%;
+            opacity: 1;
         }
 
-        /* Modal styles for settings */
+        .github-button {
+            position: absolute;
+            bottom: 80px;
+            right: 20px;
+            z-index: 2;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-family: 'Courier', 'Consolas', monospace;
+            text-decoration: none;
+            border-radius: 5px;
+            opacity: 1;
+        }
+
+        .credits {
+            position: absolute;
+            bottom: 20px;
+            right: 80px;
+            color: white;
+            font-size: 12px;
+            z-index: 1;
+            opacity: 1;
+        }
+
         .modal {
             display: none;
             position: fixed;
@@ -64,10 +91,11 @@
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
             z-index: 3;
-            font-family: 'Courier', 'Consolas', monospace; /* Ensure modal uses mono font */
+            font-family: 'Courier', 'Consolas', monospace;
+            max-width: 300px;
+            width: 100%;
         }
 
-        /* Modal overlay */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -79,7 +107,6 @@
             z-index: 2;
         }
 
-        /* Close button */
         .close-modal {
             display: block;
             margin-top: 10px;
@@ -88,25 +115,7 @@
             color: white;
             border: none;
             cursor: pointer;
-            font-family: 'Courier', 'Consolas', monospace; /* Mono font for buttons */
-        }
-
-        /* Credits section */
-        .credits {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            color: white;
-            font-size: 12px;
-            z-index: 1;
-            opacity: 1;
-            animation: fadeOut 10s 5s forwards; /* Fade out after 5 seconds, duration 10 seconds */
-        }
-
-        /* Animation for fade out effect */
-        @keyframes fadeOut {
-            0% { opacity: 1; }
-            100% { opacity: 0; }
+            font-family: 'Courier', 'Consolas', monospace;
         }
     </style>
 </head>
@@ -120,8 +129,8 @@
             </iframe>
         </div>
         <button class="settings-button"></button>
+        <a href="https://github.com/weblabsaus" class="github-button">GitHub</a>
 
-        <!-- Modal for settings -->
         <div class="modal-overlay"></div>
         <div class="modal" id="settings-modal">
             <h3>Change Settings</h3>
@@ -140,38 +149,53 @@
             <input type="file" id="custom-gif-upload" accept="image/gif" style="display: none;">
 
             <button class="close-modal" onclick="closeModal()">Close</button>
+            <button onclick="exportSettings()">Export Settings as JSON</button>
         </div>
 
-        <!-- Credits section -->
         <div class="credits">
             Credits to <a href="https://weblabsaus.github.io/Ultimate-Marketplace/" target="_blank" style="color: white;">weblabsaus</a>
         </div>
     </div>
 
     <script>
-        // Open and close modal
+        let timeout;
+        const elementsToFade = document.querySelectorAll('.embed-player, .settings-button, .github-button, .credits');
+
+        function fadeOutElements() {
+            elementsToFade.forEach(el => el.style.opacity = '0');
+        }
+
+        function fadeInElements() {
+            elementsToFade.forEach(el => el.style.opacity = '1');
+        }
+
+        document.addEventListener('mousemove', () => {
+            fadeInElements();
+            clearTimeout(timeout);
+            timeout = setTimeout(fadeOutElements, 5000); // 5 seconds of inactivity
+        });
+
+        fadeOutElements(); // Start with elements hidden
+
         const settingsButton = document.querySelector('.settings-button');
         const modal = document.getElementById('settings-modal');
         const overlay = document.querySelector('.modal-overlay');
-        
+
         settingsButton.addEventListener('click', () => {
             modal.style.display = 'block';
             overlay.style.display = 'block';
         });
 
-        overlay.addEventListener('click', () => {
-            closeModal();
-        });
+        overlay.addEventListener('click', closeModal);
 
         function closeModal() {
             modal.style.display = 'none';
             overlay.style.display = 'none';
         }
 
-        // Change Bandcamp embed code
         const bandcampUrlInput = document.getElementById('bandcamp-url');
         const bandcampPlayer = document.getElementById('bandcamp-player');
-        
+
         bandcampUrlInput.addEventListener('change', () => {
             const newEmbedUrl = bandcampUrlInput.value;
             if (newEmbedUrl) {
@@ -179,11 +203,10 @@
             }
         });
 
-        // Change GIF
         const gifSelector = document.getElementById('gif-selector');
         const gifElement = document.getElementById('campfire-gif');
         const customGifUpload = document.getElementById('custom-gif-upload');
-        
+
         gifSelector.addEventListener('change', () => {
             const selectedGif = gifSelector.value;
             if (selectedGif === 'custom') {
@@ -194,7 +217,6 @@
             }
         });
 
-        // Upload custom GIF
         customGifUpload.addEventListener('change', (event) => {
             const file = event.target.files[0];
             if (file) {
@@ -202,6 +224,21 @@
                 gifElement.src = url;
             }
         });
+
+        // Export settings as JSON
+        function exportSettings() {
+            const settings = {
+                bandcampUrl: bandcampUrlInput.value,
+                gif: gifSelector.value
+            };
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(settings));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "settings.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
     </script>
 
 </body>
