@@ -9,6 +9,7 @@
             padding: 0;
             height: 100%;
             overflow: hidden;
+            font-family: 'Courier', 'Consolas', monospace; /* Applying the monospaced font */
         }
 
         .gif-container {
@@ -30,8 +31,73 @@
         /* Position the embedded player to float over the gif */
         .embed-player {
             position: absolute;
-            bottom: 20px; /* Distance from the bottom of the window */
-            left: 20px; /* Distance from the left of the window */
+            bottom: 20px; 
+            left: 20px;
+            z-index: 1;
+        }
+
+        /* Settings button styling */
+        .settings-button {
+            position: absolute;
+            bottom: 20px; /* Bottom-right position */
+            right: 20px;
+            z-index: 2;
+            width: 50px;
+            height: 50px;
+            background: url('cog-icon.png') no-repeat center center;
+            background-size: contain;
+            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+            border: none;
+            cursor: pointer;
+            border-radius: 50%; /* Make it circular */
+        }
+
+        /* Modal styles for settings */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 3;
+            font-family: 'Courier', 'Consolas', monospace; /* Ensure modal uses mono font */
+        }
+
+        /* Modal overlay */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 2;
+        }
+
+        /* Close button */
+        .close-modal {
+            display: block;
+            margin-top: 10px;
+            padding: 5px;
+            background-color: #e99708;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-family: 'Courier', 'Consolas', monospace; /* Mono font for buttons */
+        }
+
+        /* Credits section */
+        .credits {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            color: white;
+            font-size: 12px;
             z-index: 1;
         }
     </style>
@@ -39,12 +105,95 @@
 <body>
 
     <div class="gif-container">
-        <img src="campfire.gif" alt="Campfire Gif">
-        <div class="embed-player">
+        <img id="campfire-gif" src="campfire.gif" alt="Campfire Gif">
+        <div class="embed-player" id="bandcamp-player">
             <iframe style="border: 0; width: 170px; height: 170px;" src="https://bandcamp.com/EmbeddedPlayer/album=551760206/size=large/bgcol=333333/linkcol=e99708/minimal=true/transparent=true/" seamless>
                 <a href="https://c418.bandcamp.com/album/minecraft-volume-beta">Minecraft - Volume Beta by C418</a>
             </iframe>
         </div>
+        <button class="settings-button"></button>
+
+        <!-- Modal for settings -->
+        <div class="modal-overlay"></div>
+        <div class="modal" id="settings-modal">
+            <h3>Change Settings</h3>
+            
+            <label for="bandcamp-url">Bandcamp Embed Code:</label>
+            <input type="text" id="bandcamp-url" placeholder="Paste Bandcamp embed code here" style="width:100%;">
+            
+            <h4>Change GIF</h4>
+            <select id="gif-selector" style="width:100%;">
+                <option value="campfire.gif">campfire.gif</option>
+                <option value="animationcampfire.gif">animationcampfire.gif</option>
+                <option value="trees.gif">trees.gif</option>
+                <option value="village.gif">village.gif</option>
+                <option value="custom">Upload custom GIF</option>
+            </select>
+            <input type="file" id="custom-gif-upload" accept="image/gif" style="display: none;">
+
+            <button class="close-modal" onclick="closeModal()">Close</button>
+        </div>
+
+        <!-- Credits section -->
+        <div class="credits">
+            Credits to <a href="https://weblabsaus.github.io/Ultimate-Marketplace/" target="_blank" style="color: white;">weblabsaus</a>
+        </div>
     </div>
+
+    <script>
+        // Open and close modal
+        const settingsButton = document.querySelector('.settings-button');
+        const modal = document.getElementById('settings-modal');
+        const overlay = document.querySelector('.modal-overlay');
+        
+        settingsButton.addEventListener('click', () => {
+            modal.style.display = 'block';
+            overlay.style.display = 'block';
+        });
+
+        overlay.addEventListener('click', () => {
+            closeModal();
+        });
+
+        function closeModal() {
+            modal.style.display = 'none';
+            overlay.style.display = 'none';
+        }
+
+        // Change Bandcamp embed code
+        const bandcampUrlInput = document.getElementById('bandcamp-url');
+        const bandcampPlayer = document.getElementById('bandcamp-player');
+        
+        bandcampUrlInput.addEventListener('change', () => {
+            const newEmbedUrl = bandcampUrlInput.value;
+            if (newEmbedUrl) {
+                bandcampPlayer.innerHTML = `<iframe style="border: 0; width: 170px; height: 170px;" src="${newEmbedUrl}" seamless></iframe>`;
+            }
+        });
+
+        // Change GIF
+        const gifSelector = document.getElementById('gif-selector');
+        const gifElement = document.getElementById('campfire-gif');
+        const customGifUpload = document.getElementById('custom-gif-upload');
+        
+        gifSelector.addEventListener('change', () => {
+            const selectedGif = gifSelector.value;
+            if (selectedGif === 'custom') {
+                customGifUpload.style.display = 'block';
+            } else {
+                customGifUpload.style.display = 'none';
+                gifElement.src = selectedGif;
+            }
+        });
+
+        // Upload custom GIF
+        customGifUpload.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const url = URL.createObjectURL(file);
+                gifElement.src = url;
+            }
+        });
+    </script>
 
 </body>
