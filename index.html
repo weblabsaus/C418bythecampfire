@@ -1,7 +1,10 @@
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>C418 by the Campfire</title>
+    <title>C418</title>
+    <link rel="icon" href="disk.png" type="image/png">
     <style>
         body, html {
             margin: 0;
@@ -9,6 +12,8 @@
             height: 100%;
             overflow: hidden;
             font-family: 'Courier', 'Consolas', monospace;
+            color: white;
+            background-color: black;
         }
 
         .gif-container {
@@ -26,7 +31,7 @@
             object-fit: cover;
         }
 
-        .embed-player, .settings-button, .github-button, .credits {
+        .embed-player, .settings-button, .github-button, .credits, .clock {
             transition: opacity 0.5s;
         }
 
@@ -51,7 +56,7 @@
             border: none;
             cursor: pointer;
             border-radius: 50%;
-            opacity: 1;
+            opacity: 0.8;
         }
 
         .github-button {
@@ -67,55 +72,101 @@
             font-family: 'Courier', 'Consolas', monospace;
             text-decoration: none;
             border-radius: 5px;
-            opacity: 1;
+            opacity: 0.8;
         }
 
         .credits {
             position: absolute;
             bottom: 20px;
             right: 80px;
-            color: white;
             font-size: 12px;
             z-index: 1;
-            opacity: 1;
+            opacity: 0.8;
         }
 
-        .modal {
+        .clock {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 14px;
+            z-index: 1;
+            opacity: 0.8;
+        }
+
+        .settings-panel {
             display: none;
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: white;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.8);
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
             z-index: 3;
             font-family: 'Courier', 'Consolas', monospace;
             max-width: 300px;
-            width: 100%;
+            width: 300px;
+            height: auto;
+            color: white;
+            overflow: hidden;
         }
 
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 2;
+        .settings-panel .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: move;
+            background-color: rgba(0, 0, 0, 0.9);
+            padding: 10px;
+            border-bottom: 1px solid #e99708;
         }
 
-        .close-modal {
-            display: block;
-            margin-top: 10px;
-            padding: 5px;
+        .settings-panel .header h3 {
+            margin: 0;
+        }
+
+        .settings-panel .header .resize-handle {
+            width: 10px;
+            height: 10px;
+            background: #e99708;
+            cursor: nwse-resize;
+            position: absolute;
+            bottom: 0;
+            right: 0;
+        }
+
+        .settings-panel .close-panel {
             background-color: #e99708;
             color: white;
             border: none;
             cursor: pointer;
-            font-family: 'Courier', 'Consolas', monospace;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+
+        .settings-panel label, .settings-panel select, .settings-panel input {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .settings-panel input[type="text"], .settings-panel select {
+            width: 100%;
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 5px;
+            border-radius: 5px;
+        }
+
+        .settings-panel button {
+            margin-top: 10px;
+            background-color: #e99708;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 5px;
+            opacity: 0.8;
         }
     </style>
 </head>
@@ -130,16 +181,30 @@
         </div>
         <button class="settings-button"></button>
         <a href="https://github.com/weblabsaus" class="github-button">GitHub</a>
+        <div class="credits">
+            Credits to <a href="https://weblabsaus.github.io/Ultimate-Marketplace/" target="_blank" style="color: white;">weblabsaus</a>
+        </div>
+        <div class="clock" id="clock"></div>
 
-        <div class="modal-overlay"></div>
-        <div class="modal" id="settings-modal">
-            <h3>Change Settings</h3>
-            
+        <div class="settings-panel" id="settings-panel">
+            <div class="header">
+                <h3>Change Settings</h3>
+                <button class="close-panel" onclick="closeSettingsPanel()">Close</button>
+                <div class="resize-handle"></div>
+            </div>
             <label for="bandcamp-url">Bandcamp Embed Code:</label>
-            <input type="text" id="bandcamp-url" placeholder="Paste Bandcamp embed code here" style="width:100%;">
+            <input type="text" id="bandcamp-url" placeholder="Paste Bandcamp embed code here">
+
+            <label for="font-selector">Change Font:</label>
+            <select id="font-selector">
+                <option value="'Courier', 'Consolas', monospace">Courier</option>
+                <option value="'Arial', sans-serif">Arial</option>
+                <option value="'Verdana', sans-serif">Verdana</option>
+                <!-- Add more fonts if needed -->
+            </select>
             
-            <h4>Change GIF</h4>
-            <select id="gif-selector" style="width:100%;">
+            <label for="gif-selector">Change GIF:</label>
+            <select id="gif-selector">
                 <option value="campfire.gif">campfire.gif</option>
                 <option value="animationcampfire.gif">animationcampfire.gif</option>
                 <option value="trees.gif">trees.gif</option>
@@ -148,21 +213,22 @@
             </select>
             <input type="file" id="custom-gif-upload" accept="image/gif" style="display: none;">
 
-            <button class="close-modal" onclick="closeModal()">Close</button>
-            <button onclick="exportSettings()">Export Settings as JSON</button>
-        </div>
+            <label for="tab-name">Change Tab Name:</label>
+            <input type="text" id="tab-name" placeholder="Enter new tab name">
 
-        <div class="credits">
-            Credits to <a href="https://weblabsaus.github.io/Ultimate-Marketplace/" target="_blank" style="color: white;">weblabsaus</a>
+            <button onclick="exportSettings()">Export Settings as JSON</button>
+            <button onclick="importSettings()">Import Settings from JSON</button>
         </div>
     </div>
 
     <script>
         let timeout;
-        const elementsToFade = document.querySelectorAll('.embed-player, .settings-button, .github-button, .credits');
+        const elementsToFade = document.querySelectorAll('.embed-player, .settings-button, .github-button, .credits, .clock');
 
         function fadeOutElements() {
-            elementsToFade.forEach(el => el.style.opacity = '0');
+            if (!document.querySelector('.settings-panel').contains(document.querySelector(':hover'))) {
+                elementsToFade.forEach(el => el.style.opacity = '0');
+            }
         }
 
         function fadeInElements() {
@@ -178,20 +244,70 @@
         fadeOutElements(); // Start with elements hidden
 
         const settingsButton = document.querySelector('.settings-button');
-        const modal = document.getElementById('settings-modal');
-        const overlay = document.querySelector('.modal-overlay');
+        const settingsPanel = document.getElementById('settings-panel');
+        const header = settingsPanel.querySelector('.header');
+        const resizeHandle = settingsPanel.querySelector('.resize-handle');
 
         settingsButton.addEventListener('click', () => {
-            modal.style.display = 'block';
-            overlay.style.display = 'block';
+            settingsPanel.style.display = 'block';
+            fadeInElements();
         });
 
-        overlay.addEventListener('click', closeModal);
-
-        function closeModal() {
-            modal.style.display = 'none';
-            overlay.style.display = 'none';
+        function closeSettingsPanel() {
+            settingsPanel.style.display = 'none';
+            fadeOutElements();
         }
+
+        function makeResizable(element) {
+            let startX, startY, startWidth, startHeight;
+
+            const onMouseMove = (event) => {
+                element.style.width = startWidth + (event.clientX - startX) + 'px';
+                element.style.height = startHeight + (event.clientY - startY) + 'px';
+            };
+
+            const onMouseUp = () => {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            };
+
+            resizeHandle.addEventListener('mousedown', (event) => {
+                event.preventDefault();
+                startX = event.clientX;
+                startY = event.clientY;
+                startWidth = parseFloat(getComputedStyle(element, null).width.replace('px', ''));
+                startHeight = parseFloat(getComputedStyle(element, null).height.replace('px', ''));
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+        }
+
+        function makeDraggable(element) {
+            let offsetX, offsetY, startX, startY;
+
+            const onMouseMove = (event) => {
+                element.style.top = (event.clientY - offsetY) + 'px';
+                element.style.left = (event.clientX - offsetX) + 'px';
+            };
+
+            const onMouseUp = () => {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            };
+
+            header.addEventListener('mousedown', (event) => {
+                event.preventDefault();
+                startX = event.clientX;
+                startY = event.clientY;
+                offsetX = event.clientX - element.getBoundingClientRect().left;
+                offsetY = event.clientY - element.getBoundingClientRect().top;
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+        }
+
+        makeResizable(settingsPanel);
+        makeDraggable(settingsPanel);
 
         const bandcampUrlInput = document.getElementById('bandcamp-url');
         const bandcampPlayer = document.getElementById('bandcamp-player');
@@ -225,11 +341,12 @@
             }
         });
 
-        // Export settings as JSON
         function exportSettings() {
             const settings = {
                 bandcampUrl: bandcampUrlInput.value,
-                gif: gifSelector.value
+                gif: gifSelector.value,
+                font: document.getElementById('font-selector').value,
+                tabName: document.getElementById('tab-name').value
             };
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(settings));
             const downloadAnchorNode = document.createElement('a');
@@ -239,6 +356,54 @@
             downloadAnchorNode.click();
             downloadAnchorNode.remove();
         }
-    </script>
 
+        function importSettings() {
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = 'application/json';
+            fileInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        const settings = JSON.parse(reader.result);
+                        if (settings.bandcampUrl) {
+                            bandcampUrlInput.value = settings.bandcampUrl;
+                            bandcampPlayer.innerHTML = `<iframe style="border: 0; width: 170px; height: 170px;" src="${settings.bandcampUrl}" seamless></iframe>`;
+                        }
+                        if (settings.gif) {
+                            gifSelector.value = settings.gif;
+                            if (settings.gif === 'custom') {
+                                customGifUpload.style.display = 'block';
+                            } else {
+                                customGifUpload.style.display = 'none';
+                                gifElement.src = settings.gif;
+                            }
+                        }
+                        if (settings.font) {
+                            document.body.style.fontFamily = settings.font;
+                            document.getElementById('font-selector').value = settings.font;
+                        }
+                        if (settings.tabName) {
+                            document.title = settings.tabName;
+                            document.getElementById('tab-name').value = settings.tabName;
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            });
+            fileInput.click();
+        }
+
+        function updateClock() {
+            const clockElement = document.getElementById('clock');
+            const now = new Date();
+            const options = { timeZone: 'Australia/Sydney', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+            clockElement.textContent = now.toLocaleTimeString('en-US', options);
+        }
+
+        setInterval(updateClock, 1000);
+        updateClock(); // Initial call
+    </script>
 </body>
+</html>
